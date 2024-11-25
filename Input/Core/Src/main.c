@@ -21,7 +21,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <string.h>
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -40,6 +41,8 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+TIM_HandleTypeDef htim1;
+
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
@@ -50,13 +53,28 @@ UART_HandleTypeDef huart2;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_TIM1_Init(void);
 /* USER CODE BEGIN PFP */
+// Helper Function Declarations
+int _write(int file, char *data, int len);
+void delay_us(uint16_t us);
 
+// Core Function Declaratons
+float measure_pulse_duration(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
+void send_trigger_pulse(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
+float measure_distance(GPIO_TypeDef* TRIG_GPIOx, uint16_t TRIG_GPIO_Pin,
+					   GPIO_TypeDef* ECHO_GPIOx, uint16_t ECHO_GPIO_Pin);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+// Measurement Variables
+float s1_duration;
+float s1_distance_cm;
+float s2_duration;
+float s2_distance_cm;
+float s3_duration;
+float s3_distance_cm;
 /* USER CODE END 0 */
 
 /**
@@ -89,14 +107,38 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
+  MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
-
+  // Start Timer 1 after peripherals are initialized
+  HAL_TIM_Base_Start(&htim1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	// Sensor 1 (Top) Measurement
+	s1_distance_cm = measure_distance(GPIOB, GPIO_PIN_3,
+									  GPIOB, GPIO_PIN_5);
+	// Sensor 2 (Left) Measurement
+	s2_distance_cm = measure_distance(GPIOB, GPIO_PIN_4,
+									  GPIOB, GPIO_PIN_10);
+	// Sensor 3 (Right) Measurement
+	s3_distance_cm = measure_distance(GPIOA, GPIO_PIN_8,
+									  GPIOC, GPIO_PIN_7);
+
+	////if (distance_cm >= 0.0f && distance_cm <= 15.0f) {
+
+	////}
+
+	// Print distance measurements (cm) with two decimal places
+	printf("Sensor 1 (Top) Distance: %.2f cm\r\n", s1_distance_cm);
+	printf("Sensor 2 (Left) Distance: %.2f cm\r\n", s2_distance_cm);
+	printf("Sensor 3 (Right) Distance: %.2f cm\r\n", s3_distance_cm);
+
+	// Wait to send the next trigger pulse to avoid overlapping of measurements (min 25 us)
+	HAL_Delay(1000);
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -151,6 +193,52 @@ void SystemClock_Config(void)
 }
 
 /**
+  * @brief TIM1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM1_Init(void)
+{
+
+  /* USER CODE BEGIN TIM1_Init 0 */
+
+  /* USER CODE END TIM1_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM1_Init 1 */
+
+  /* USER CODE END TIM1_Init 1 */
+  htim1.Instance = TIM1;
+  htim1.Init.Prescaler = 84-1;
+  htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim1.Init.Period = 65535;
+  htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim1.Init.RepetitionCounter = 0;
+  htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim1, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim1, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM1_Init 2 */
+
+  /* USER CODE END TIM1_Init 2 */
+
+}
+
+/**
   * @brief USART2 Initialization Function
   * @param None
   * @retval None
@@ -201,7 +289,10 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, LD2_Pin|S3_TRIG_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, S1_TRIG_Pin|S2_TRIG_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -209,19 +300,119 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : LD2_Pin */
-  GPIO_InitStruct.Pin = LD2_Pin;
+  /*Configure GPIO pins : LD2_Pin S3_TRIG_Pin */
+  GPIO_InitStruct.Pin = LD2_Pin|S3_TRIG_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : S2_ECHO_Pin S1_ECHO_Pin */
+  GPIO_InitStruct.Pin = S2_ECHO_Pin|S1_ECHO_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : S3_ECHO_Pin */
+  GPIO_InitStruct.Pin = S3_ECHO_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(S3_ECHO_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : S1_TRIG_Pin S2_TRIG_Pin */
+  GPIO_InitStruct.Pin = S1_TRIG_Pin|S2_TRIG_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
+/// Helper Function Definitions
+// Override printf() to transmit message through UART
+int _write(int file, char *data, int len) {
+	HAL_UART_Transmit(&huart2, (uint8_t*)data, len, HAL_MAX_DELAY);
+	return len;
+}
+// Create a delay in microseconds (us)
+void delay_us (uint16_t time_us) {
+	// Reset Timer 1 Counter to initiate new count
+	__HAL_TIM_SET_COUNTER(&htim1, 0);
+	// Wait for Timer 1 Counter to reach input time in us
+	while(__HAL_TIM_GET_COUNTER(&htim1) < time_us);
 
+	return;
+}
+
+/// Core Function Definitions
+// Initiate sensor time measurement
+void send_trigger_pulse(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
+	//Reset Trig Pin to ensure clean signal
+	HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_RESET);
+	delay_us(2);  // Buffer time
+
+	// Send trigger signal to Trig Pin
+	HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_SET);
+	delay_us(10);  // Supply 10 us pulse to start ranging
+	HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_RESET);
+}
+// Measure how long Echo Pin is HIGH after being SET from RESET using Timer 1
+float measure_pulse_duration(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
+	// Time Measurement Variables
+	uint32_t start_time = 0.0;
+	uint32_t end_time = 0.0;
+	uint32_t pulse_duration_ticks = 0.0;
+	float pulse_duration_us = 0.0f;
+
+	// Wait for Echo Pin to be SET (rising edge of pulse)
+	while (HAL_GPIO_ReadPin(GPIOx, GPIO_Pin) == GPIO_PIN_RESET);
+
+	// Start timing when Echo Pin is SET
+	start_time = __HAL_TIM_GET_COUNTER(&htim1);  // Capture current timer value
+
+	// Wait for Echo Pin to be RESET (falling edge of pulse)
+	while (HAL_GPIO_ReadPin(GPIOx, GPIO_Pin) == GPIO_PIN_SET);
+
+	// Capture end time when pin is RESET
+	end_time = __HAL_TIM_GET_COUNTER(&htim1);
+
+	// Calculate pulse duration in terms of timer ticks
+	if (end_time >= start_time) {
+		pulse_duration_ticks = end_time - start_time;
+	} else {
+		pulse_duration_ticks = (0xFFFFFFFF - start_time) + end_time;  // Handle timer overflow
+	}
+
+	// Note: Each timer tick corresponds to 1 microsecond
+	// Convert pulse duration from uint32_t to float
+	pulse_duration_us = (float)pulse_duration_ticks;  // Cast as float
+
+	return pulse_duration_us;
+}
+
+// Measure the distance between object and sensor in centimetres
+float measure_distance(GPIO_TypeDef* TRIG_GPIOx, uint16_t TRIG_GPIO_Pin,
+					   GPIO_TypeDef* ECHO_GPIOx, uint16_t ECHO_GPIO_Pin) {
+    // Distance Measurement Variables
+	float sx_duration;
+	float sx_distance_cm;
+
+	// Activate sensor measurement
+    send_trigger_pulse(TRIG_GPIOx, TRIG_GPIO_Pin);
+
+    /// Return pulse duration in microseconds
+    // If SET, waits for the moment pin is SET from RESET
+    // Stops timing when pin is RESET (when echo returns to receiver)
+    sx_duration = measure_pulse_duration(ECHO_GPIOx, ECHO_GPIO_Pin);
+
+    // Convert to duration to distance in centimetres using d = vt and account for reflection
+    sx_distance_cm = ( ( sx_duration * (1.0E-6f) ) * (343.0f) * (100.0f) ) / 2.0f;
+
+	return sx_distance_cm;
+}
 /* USER CODE END 4 */
 
 /**

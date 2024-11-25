@@ -1,0 +1,41 @@
+2024-11-25 01:34:29,037 [INFO] WebApp:189 - Connection lost
+2024-11-25 01:34:29,439 [INFO] WebApp:186 - Connection restablished
+2024-11-25 02:26:42,616 [INFO] UtilMem:75 - End SaveConfig() Used Memory: 246351720 Bytes (545259520)
+2024-11-25 02:26:44,657 [INFO] UtilMem:75 - End SaveConfig() Used Memory: 184104840 Bytes (545259520)
+2024-11-25 02:26:49,792 [INFO] UtilMem:75 - End SaveConfig() Used Memory: 178507888 Bytes (545259520)
+2024-11-25 02:26:50,119 [INFO] BlockDiagram:2766 - set Specific Code input for plugin: NVIC
+2024-11-25 02:26:50,120 [INFO] BlockDiagram:2766 - set Specific Code input for plugin: USART
+2024-11-25 02:26:50,120 [INFO] BlockDiagram:2766 - set Specific Code input for plugin: TIM1_8
+2024-11-25 02:26:50,120 [INFO] BlockDiagram:2766 - set Specific Code input for plugin: SYS
+2024-11-25 02:26:50,120 [INFO] BlockDiagram:2766 - set Specific Code input for plugin: GPIO
+2024-11-25 02:26:50,120 [INFO] BlockDiagram:2766 - set Specific Code input for plugin: RCC
+2024-11-25 02:26:50,121 [INFO] CodeGenerator:807 - code generatio: config db path: C:\ST\STM32CubeIDE_1.16.1\STM32CubeIDE\plugins\com.st.stm32cube.common.mx_6.12.1.202409122256\\db\
+2024-11-25 02:26:50,299 [INFO] CodeEngine:255 - oldGeneratedFile, C:\Users\Leo\STM32CubeIDE\ECE_198\Input\MXTmpFiles\license.tmp_save
+2024-11-25 02:26:50,558 [INFO] CodeEngine:279 - Generated code: C:\Users\Leo\STM32CubeIDE\ECE_198\Input\MXTmpFiles\license.tmp
+2024-11-25 02:26:50,613 [INFO] CodeEngine:255 - oldGeneratedFile, C:\Users\Leo\STM32CubeIDE\ECE_198\Input\MXTmpFiles\gpio.tmp_save
+2024-11-25 02:26:50,711 [INFO] CodeEngine:279 - Generated code: C:\Users\Leo\STM32CubeIDE\ECE_198\Input\MXTmpFiles\gpio.tmp
+2024-11-25 02:26:50,879 [INFO] CodeEngine:255 - oldGeneratedFile, C:\Users\Leo\STM32CubeIDE\ECE_198\Input\Core\Src\stm32f4xx_it.c_save
+2024-11-25 02:26:50,978 [INFO] CodeEngine:279 - Generated code: C:\Users\Leo\STM32CubeIDE\ECE_198\Input\Core\Src\stm32f4xx_it.c
+2024-11-25 02:26:50,994 [INFO] CodeEngine:255 - oldGeneratedFile, C:\Users\Leo\STM32CubeIDE\ECE_198\Input\Core\Inc\stm32f4xx_it.h_save
+2024-11-25 02:26:51,065 [INFO] CodeEngine:279 - Generated code: C:\Users\Leo\STM32CubeIDE\ECE_198\Input\Core\Inc\stm32f4xx_it.h
+2024-11-25 02:26:51,088 [INFO] CodeEngine:255 - oldGeneratedFile, C:\Users\Leo\STM32CubeIDE\ECE_198\Input\Core\Src\stm32f4xx_hal_msp.c_save
+2024-11-25 02:26:51,201 [INFO] CodeEngine:279 - Generated code: C:\Users\Leo\STM32CubeIDE\ECE_198\Input\Core\Src\stm32f4xx_hal_msp.c
+2024-11-25 02:26:51,212 [INFO] CodeEngine:255 - oldGeneratedFile, C:\Users\Leo\STM32CubeIDE\ECE_198\Input\MXTmpFiles\system.tmp_save
+2024-11-25 02:26:51,268 [INFO] CodeEngine:279 - Generated code: C:\Users\Leo\STM32CubeIDE\ECE_198\Input\MXTmpFiles\system.tmp
+2024-11-25 02:26:51,287 [INFO] CodeEngine:311 - oldGeneratedFile, C:\Users\Leo\STM32CubeIDE\ECE_198\Input\Core\Inc\stm32f4xx_hal_conf.h_save
+2024-11-25 02:26:51,369 [INFO] CodeEngine:335 - Generated code: C:\Users\Leo\STM32CubeIDE\ECE_198\Input\Core\Inc\stm32f4xx_hal_conf.h
+2024-11-25 02:26:51,408 [WARN] IPConfigManager:3554 - IP not found : TIM
+2024-11-25 02:26:51,409 [WARN] CodeGenerator:4002 - IP not found : null
+2024-11-25 02:26:51,429 [INFO] CodeEngine:255 - oldGeneratedFile, C:\Users\Leo\STM32CubeIDE\ECE_198\Input\Core\Inc\main.h_save
+2024-11-25 02:26:51,519 [INFO] CodeEngine:279 - Generated code: C:\Users\Leo\STM32CubeIDE\ECE_198\Input\Core\Inc\main.h
+2024-11-25 02:26:51,541 [INFO] CodeEngine:255 - oldGeneratedFile, C:\Users\Leo\STM32CubeIDE\ECE_198\Input\Core\Src\main.c_save
+2024-11-25 02:26:51,658 [INFO] CodeEngine:279 - Generated code: C:\Users\Leo\STM32CubeIDE\ECE_198\Input\Core\Src\main.c
+2024-11-25 02:26:52,005 [INFO] ProjectBuilder:3249 - Time for Copy HAL[1] : 171mS.
+2024-11-25 02:26:52,010 [INFO] ProjectBuilder:4828 - Project Generator version: 4.5.0-B34
+2024-11-25 02:26:52,075 [INFO] ConfigFileManager:1531 - The Die is : DIE433
+2024-11-25 02:26:52,092 [INFO] ApiDbMcu:508 - Load IP Config File for FATFS
+2024-11-25 02:26:52,117 [INFO] ApiDbMcu:508 - Load IP Config File for FREERTOS
+2024-11-25 02:26:52,128 [INFO] ApiDbMcu:508 - Load IP Config File for LIBJPEG
+2024-11-25 02:26:52,161 [INFO] ApiDbMcu:508 - Load IP Config File for MBEDTLS
+2024-11-25 02:26:52,192 [INFO] ApiDbMcu:508 - Load IP Config File for USB_DEVICE
+2024-11-25 02:26:52,206 [INFO] ApiDbMcu:508 - Load IP Config File for USB_HOST
