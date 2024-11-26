@@ -43,6 +43,7 @@
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim1;
 
+UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
@@ -54,6 +55,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM1_Init(void);
+static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 // Helper Function Declarations
 int _write(int file, char *data, int len);
@@ -75,6 +77,7 @@ float s2_duration;
 float s2_distance_cm;
 float s3_duration;
 float s3_distance_cm;
+
 /* USER CODE END 0 */
 
 /**
@@ -108,9 +111,21 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   MX_TIM1_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   // Start Timer 1 after peripherals are initialized
   HAL_TIM_Base_Start(&htim1);
+  // Variables for UART [NOTE: make sure to declare in main()])
+  char *condition;  // Set up a variable that can be modified to store data before TX/RX
+  char UART1_txBuffer[20];  // Set up a buffer string to transmit data
+  // Sensor Parameters
+  float side_threshold = 40.00f;
+  float top_threshold = 30.00f;
+  // Sensor States
+  uint8_t s1_safe;
+  uint8_t s2_safe;
+  uint8_t s3_safe;
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -127,14 +142,48 @@ int main(void)
 	s3_distance_cm = measure_distance(GPIOA, GPIO_PIN_8,
 									  GPIOC, GPIO_PIN_7);
 
-	////if (distance_cm >= 0.0f && distance_cm <= 15.0f) {
-
-	////}
-
 	// Print distance measurements (cm) with two decimal places
 	printf("Sensor 1 (Top) Distance: %.2f cm\r\n", s1_distance_cm);
 	printf("Sensor 2 (Left) Distance: %.2f cm\r\n", s2_distance_cm);
 	printf("Sensor 3 (Right) Distance: %.2f cm\r\n", s3_distance_cm);
+
+	// Determine states of each sensor
+	if (s1_distance_cm  >= top_threshold) {
+		s1_safe = 1;
+	} else {
+		s1_safe = 0;
+	}
+	if (s2_distance_cm >= side_threshold) {
+		s2_safe = 1;
+	} else {
+		s2_safe = 0;
+	}
+	if (s3_distance_cm >= side_threshold) {
+		s3_safe = 1;
+	} else {
+		s3_safe = 0;
+	}
+
+	/// Determine condition for Output MCU
+	// Check if car is pulled in correctly
+	if ( s1_safe == 0 ) {
+		condition = "Move back";
+	// Once car is pulled in, check if car is within side parking lines
+	} else if (s1_safe == 1) {
+		if ( (s2_safe == 1) && (s3_safe == 1) ) {
+			condition = "Success";
+		} else if ( s2_safe == 0 ) {
+			condition = "Move right";
+		} else {
+			condition = "Move left";
+		}
+	}
+
+	/// TX
+	// Format the message and package it up in the buffer
+    sprintf(UART1_txBuffer, "%s", condition);
+	// Transmit to Output MCU
+	HAL_UART_Transmit(&huart1, (uint8_t*)UART1_txBuffer, 20, HAL_MAX_DELAY);
 
 	// Wait to send the next trigger pulse to avoid overlapping of measurements (min 25 us)
 	HAL_Delay(1000);
@@ -235,6 +284,39 @@ static void MX_TIM1_Init(void)
   /* USER CODE BEGIN TIM1_Init 2 */
 
   /* USER CODE END TIM1_Init 2 */
+
+}
+
+/**
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART1_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART1_Init 0 */
+
+  /* USER CODE END USART1_Init 0 */
+
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 115200;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART1_Init 2 */
+
+  /* USER CODE END USART1_Init 2 */
 
 }
 
